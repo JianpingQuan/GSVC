@@ -1,0 +1,57 @@
+# GSVC_github publication script
+status	dest	source	note
+OK	Fig1a_country_sample_map.R	finalFigures/Figure1/country_sample_counts_by_continent_positions.R	Fig. 1a world map
+OK	Fig1c_vOTU_length_ridge.R	finalFigures/Figure1/Fig 1c.R	Fig. 1c length ridgeline
+OK	Fig1d_novelty_ICTV_IMGVR.R	finalFigures/Figure1/Fig 1d.R	Fig. 1d novelty bars
+OK	Fig1e_database_comparison.R	finalFigures/Figure1/Fig 1e.R	Fig. 1e database comparison
+OK	Fig1f_read_capture.R	finalFigures/Figure1/Fig 1f.R	Fig. 1f read capture
+OK	Fig1g_novel_vOTU_bars.R	finalFigures/Figure1/Fig 1g.R	Fig. 1g novel vOTUs
+OK	FigS2_vOTU_length_study_compare.R	finalFigures/Figure1/Fig S2/Distribution of vOTU Lengths(study对比）/优化.R	Fig. S2
+OK	FigS3_cross_study_clustering.R	finalFigures/Figure1/Fig S3.R	Fig. S3
+OK	Fig2a_taxonomy_composition_GSVC.R	Functional/scripts/plot_fig3_taxonomy_composition_R.R	Fig. 2a
+OK	Fig3a_alpha_by_country.py	biogeography_descriptive_analysis.py	Fig. 3a (runs full biogeo module)
+OK	Fig3b_rarefaction_by_country.py	03_Biogeographical/biogeography_rarefaction_by_country.py	Fig. 3b
+OK	Fig3c_pcoa_bray_country_centroids.py	04_CLR_PERMANOVA/compositional_continent_analysis.py	Fig. 3c
+OK	Fig3d_distance_decay_within_country.py	04_CLR_PERMANOVA/distance_decay_spatial_subsets.py	Fig. 3d/e
+OK	Fig3f_neutral_model_sloan.py	make_paper_figs_part2.py	Fig. 3f
+OK	Fig4a_host_phylum_genus_bars.R	host_taxonomy_vOTU_top20_plot.R	Fig. 4a–b
+OK	Fig4c_host_range_breadth_lines.R	host_range_and_infection_stats.R	Fig. 4c–d
+OK	Fig4e_abundance_vOTU_correlation.R	abundance_lifestyle_vOTU_correlation.R	Fig. 4e
+OK	Fig4f_host_range_lifestyle_bar.R	host_range_and_infection_stats.R	Fig. 4f (same source; see README)
+OK	Fig4g_kill_the_winner_stratified.R	abundance_Virulent_vOTU_correlation.R	Fig. 4g
+OK	Fig4h_age_binscatter_species.R	binscatter_overlay_stage_two_species_feces.R	Fig. 4h
+OK	Fig5a_prevalence_hist_ecdf.py	06_core_virome_figs/core_prevalence_taxonomy_host_pies.py	Fig. 5a–b
+OK	Fig5c_core_tpm_by_gut_stacked.R	meta_qc/plot_core_votu_tpm_fraction_by_gut.R	Fig. 5c
+OK	Fig5d_ge05_host_genus_by_gut.R	meta_qc/plot_ge05_votu_host_genus_by_gut_stacked.R	Fig. 5d
+OK	Fig5e_PCoA_PAM_k4.R	meta_qc/run_enterotype_votu.R	Fig. 5e (full enterotype pipeline)
+OK	Fig5f_enterotype_driver_heatmap.R	meta_qc/plot_enterotype_marker_heatmap.R	Fig. 5f
+OK	Fig5g_lab_prev_ratio_boxplot.R	meta_qc/plot_enterotype_lab_prev_ratio_boxplot.R	Fig. 5g
+OK	Fig5h_enterotype_age_pies.R	meta_qc/plot_enterotype_cluster_age_pie.R	Fig. 5h
+OK	FigS10_core_taxonomy_pies.py	06_core_virome_figs/core_prevalence_taxonomy_host_pies.py	Fig. S10
+OK	FigS11_enterotype_alpha_boxplot.R	meta_qc/plot_enterotype_alpha_diversity.R	Fig. S11
+OK	Fig6a_eggnog_top_terms.R	Functional/plot_vibrant_amg_metabolism_distribution.R	Fig. 6a (see README)
+OK	Fig6b_ARG_burden_by_country.R	Functional/plot_ARG_country_strict_vs_nonstrict.R	Fig. 6b
+OK	Fig6c_AMG_host_metabolism_heatmap.R	Functional/plot_vibrant_metabolism_host_heatmap_FDR.R	Fig. 6c
+OK	Fig6d_jaccard_null_model.R	Functional/host_phage_ko_coupling_figures.py	Fig. 6d
+OK	Fig6e_KO_directionality_forest.py	Functional/host_phage_ko_coupling_figures.py	Fig. 6e
+OK	FigS12_AMG_metabolism_bars.R	Functional/plot_vibrant_amg_metabolism_distribution.R	Fig. S12
+OK	FigS13_ARG_nonstrict_country.R	Functional/plot_ARG_country_strict_vs_nonstrict.R	Fig. S13
+OK	FigS14_VF_box_by_country.R	Functional/vf_phage_host_plots.R	Fig. S14
+OK	FigS15_AMG_distribution.R	Functional/plot_vibrant_amg_metabolism_distribution.R	Fig. S15
+OK	FigS5_lifestyle_pie.R	lifestyle_virulent_temperate_proportion.R	Fig. S5
+OK	FigS6_KO_single_vs_broad_host.R	meta_qc/PRJNA1010706_treatment_analysis/plot_KO_enrichment_single_vs_broad_bar.R	Fig. S6
+OK	FigS7_CAZy_single_vs_broad.R	meta_qc/PRJNA1010706_treatment_analysis/plot_host_range_CAZy_integrase_bar.R	Fig. S7
+OK	FigS8_integrase_prevalence.R	meta_qc/PRJNA1010706_treatment_analysis/plot_host_range_CAZy_integrase_bar.R	Fig. S8
+OK	FigS9_lifestyle_abundance_correlation.R	abundance_lifestyle_vOTU_correlation.R	Fig. S9
+OK	Fig2b_multi_family_circular_phylo.R	Functional/scripts/plot_multi_family_circular_phylo.R	Fig. 2b
+OK	Fig7a_treatment_schematic.py	meta_qc/PRJNA1010706_meta_merged/plot_meta_summary.py	Fig. 7a cohort schematic
+OK	Fig7b_phage_alpha_lineplot_7arm.R	meta_qc/PRJNA1010706_treatment_analysis/plot_lineplot_7arm_4age_quick.R	Fig. 7b
+OK	Fig7c_ARG_phage_fraction_facets.R	meta_qc/PRJNA1010706_treatment_analysis/plot_arg_frac_boxline_facets.R	Fig. 7c
+OK	Fig7d_lsalivarius_prophage_scatter.py	meta_qc/PRJNA1010706_treatment_analysis/26_plot_lsalivarius_scatter_pub.py	Fig. 7d
+OK	Fig7e_provirus_linear_map.R	meta_qc/PRJNA1010706_treatment_analysis/plot_provirus_gggenes_SRR15732359.R	Fig. 7e
+OK	FigS17_shannon_by_arm_facets.R	meta_qc/PRJNA1010706_treatment_analysis/plot_shannon_boxline_facets.R	Fig. S17
+OK	FigS18_pcoa_treatment_age.R	meta_qc/PRJNA1010706_treatment_analysis/plot_pcoa_treatment_age_quick.R	Fig. S18
+OK	FigS19_ARG_frac_vs_G6.R	meta_qc/PRJNA1010706_treatment_analysis/plot_arg_frac_vs_G6_by_age_wilcox.R	Fig. S19
+OK	FigS20_KO_heatmap_treatment.R	meta_qc/PRJNA1010706_treatment_analysis/plot_functional_kegg_cazy_heatmap.R	Fig. S20
+OK	FigS21_CAZy_heatmap_treatment.R	meta_qc/PRJNA1010706_treatment_analysis/plot_functional_kegg_cazy_heatmap.R	Fig. S21
+OK	FigS22_lsalivarius_evidence_chain.py	meta_qc/PRJNA1010706_treatment_analysis/25_lsalivarius_prophage_evidence_no_mediation.py	Fig. S22
