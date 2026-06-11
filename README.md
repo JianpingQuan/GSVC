@@ -37,7 +37,7 @@ Install each tool following its official manual. Versions listed below are those
 | Prodigal | v2.6.3 | https://github.com/hyattpd/Prodigal |
 | iPHoP | v1.3.3 | https://bitbucket.org/berkeleylab/iphop |
 | CRT | v1.2-CLI | https://github.com/davidw/devis/CRT |
-| Piler-CR | — | https://www.drive5.com/pilercr/ |
+| Piler-CR | v1.06 | https://www.drive5.com/pilercr/ |
 | BLAST+ | v2.12.0+ | https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ |
 | BACPHLIP | v0.9.6 | https://github.com/adamhockenberry/bacphlip |
 | PhaTYP | v2.0 | https://github.com/gumeng999/PhaTYP |
@@ -45,8 +45,8 @@ Install each tool following its official manual. Versions listed below are those
 | eggNOG-mapper | v2.1.12 | http://eggnog-mapper.embl.de/ |
 | DIAMOND | v0.9.14.115 | https://github.com/bbuchfink/diamond |
 | AMRFinderPlus | v3.11.2 | https://github.com/ncbi/amr |
-| vContact3 | — | https://bitbucket.org/MAVERICLab/vcontact3 |
-| seqkit | — | https://github.com/shenwei356/seqkit |
+| vContact3 | v3.1.6 | https://bitbucket.org/MAVERICLab/vcontact3 |
+| seqkit | v2.13.0 | https://github.com/shenwei356/seqkit |
 | R | ≥ 4.2 | https://www.r-project.org/ |
 | Python | ≥ 3.9 | https://www.python.org/ |
 
