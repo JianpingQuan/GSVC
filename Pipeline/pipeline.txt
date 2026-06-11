@@ -1,0 +1,694 @@
+##--------------QC ----------------------------##
+for BIOPROJECT in PRJNA526405
+do
+while read line
+do
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+fq1=$(echo $line | cut -d " " -f 3)
+fq2=$(echo $line | cut -d " " -f 4)
+
+contig=/work/home/acq6mmxy68/pipeline/config/config.param
+logdir=/work/home/acq6mmxy68/pipeline/logs
+
+sbatch --parsable --export=sample="$sample",bioproject="$bioproject",fq1="$fq1",fq2="$fq2",contig="$contig",logdir="$logdir" /work/home/acq6mmxy68/pipeline/sbatch/00_raw_qc.sbatch
+done < <(tail -n+2 /work/home/acq6mmxy68/pipeline/config/sampleList/sample_metadata_$BIOPROJECT.tsv)
+done
+
+
+##---------------QC report-------------------
+for bioproject in PRJNA526405
+do
+python /work/home/acq6mmxy68/pipeline/script/00_generate_fastp_report.py $bioproject /work/home/acq6mmxy68/Public/results/$bioproject/clean
+done
+
+
+#-----------clean data pathway----------------
+for bioproject in PRJNA526405
+do
+python /work/home/acq6mmxy68/pipeline/script/generate_clean_metadata.py\
+  --bioproject $bioproject \
+  --data_dir /work/home/acq6mmxy68/Public/results/$bioproject/clean
+done
+
+
+##--------------Host filtering-----------------##
+for BIOPROJECT in PRJNA526405
+do
+while read line
+do
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+fq1=$(echo $line | cut -d " " -f 3)
+fq2=$(echo $line | cut -d " " -f 4)
+
+contig=/work/home/acq6mmxy68/pipeline/config/config.param
+logdir=/work/home/acq6mmxy68/pipeline/logs
+
+sbatch --export=sample="$sample",bioproject="$bioproject",fq1="$fq1",fq2="$fq2",contig="$contig",logdir="$logdir" /work/home/acq6mmxy68/pipeline/sbatch/01_host_filter.sbatch  # seperate pool and individual sample
+done < <(tail -n+3002 /work/home/acq6mmxy68/pipeline/config/sampleList/sample_metadata_"$BIOPROJECT"_clean.tsv|head -n 250)
+done
+
+
+##---------------Host filter report --------------
+for bioproject in PRJNA526405
+do
+python /work/home/acq6mmxy68/pipeline/script/01_extract_bowtie2_stats.py \
+--bioproject $bioproject  \
+--nohost_dir /work/home/acq6mmxy68/Public/results/$bioproject/nohost
+done
+
+
+#--------------nohost data pathway--------------------
+for bioproject in CNP0000824
+do
+
+python /work/home/acq6mmxy68/pipeline/script/generate_unmap_metadata.py\
+  --bioproject $bioproject \
+  --data_dir /work/home/acq6mmxy68/Public/results/$bioproject/nohost
+done
+
+##--------------II-1: Binning-----------------
+
+for BIOPROJECT in PRJNA526405
+do
+while read line
+do
+
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+fq1=$(echo $line | cut -d " " -f 3)
+fq2=$(echo $line | cut -d " " -f 4)
+
+logdir=/work/home/acq6mmxy68/pipeline/logs
+
+sbatch --export=sample="$sample",bioproject="$bioproject",fq1="$fq1",fq2="$fq2",logdir="$logdir" /work/home/acq6mmxy68/pipeline/sbatch/II-1_binning.sbatch
+
+done < <(tail -n+752 /work/home/acq6mmxy68/pipeline/config/sampleList/sample_metadata_"$BIOPROJECT"_unmap.tsv|head -n 250)
+
+done
+
+
+##--------------II-2: checkm----------------
+
+for BIOPROJECT in PRJNA526405
+
+do
+while read line
+do
+
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+
+contig=/work/home/acq6mmxy68/pipeline/config/config.param
+logdir=/work/home/acq6mmxy68/pipeline/logs
+
+sbatch --export=sample="$sample",bioproject="$bioproject",contig="$contig",logdir="$logdir" /work/home/acq6mmxy68/pipeline/sbatch/II-2_checkm.batch
+
+done < <(tail -n+752 /work/home/acq6mmxy68/pipeline/config/sampleList/sample_metadata_"$BIOPROJECT"_unmap.tsv|head -n 250)
+
+done
+
+
+
+##-------------II-3: bin_refinement----------
+for BIOPROJECT in PRJEB15296
+do
+while read line
+do
+
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+
+mkdir -p /work/home/acq6mmxy68/Public/results/"$bioproject"/checkm/"$sample"/refined_bins
+
+python /work/home/acq6mmxy68/pipeline/script/II-3_filter_bins_median.py \
+    /work/home/acq6mmxy68/Public/results/"$bioproject"/checkm/"$sample"/storage/bin_stats_ext.tsv \
+    /work/home/acq6mmxy68/Public/results/"$bioproject"/binning/"$sample" \
+    /work/home/acq6mmxy68/Public/results/"$bioproject"/checkm/"$sample"/refined_bins
+
+done < <(tail -n+2 /work/home/acq6mmxy68/pipeline/config/sampleList/sample_metadata_"$BIOPROJECT"_unmap.tsv)
+
+done
+
+
+
+##----------------II-4: bin rename-----------
+
+for BIOPROJECT in PRJNA526405
+do
+while read line
+do
+
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+
+bash /work/home/acq6mmxy68/pipeline/script/II-4_rename_bins.sh "$bioproject" "$sample"
+
+done < <(tail -n+2 /work/home/acq6mmxy68/pipeline/config/sampleList/sample_metadata_"$BIOPROJECT"_unmap.tsv)
+
+done
+
+
+
+##----------------II-5: MAG dRep----------------
+#1) each bioproject dRep respectively
+while read line
+do
+bioproject=$(echo $line | cut -d " " -f 1)
+
+logdir=/work/home/acq6mmxy68/Public/results/"$bioproject"/drep/drep_out
+
+mkdir -p "${logdir}"
+
+sbatch --export=bioproject="$bioproject" \
+       --output="${logdir}/"$bioproject".drep1.sbatch.log" \
+       --error="${logdir}/"$bioproject".drep1.sbatch.err" \
+       /work/home/acq6mmxy68/pipeline/sbatch/II-5a_drep_dereplicate.sbatch
+
+done < /work/home/acq6mmxy68/pipeline/config/sampleList/bioproject.list.txt
+
+cat /work/home/acq6mmxy68/pipeline/config/sampleList/bioproject.list.txt|while read line
+do
+cat /work/home/acq6mmxy68/Public/results/"$line"/drep/drep_out/"$line".drep1.sbatch.err|tail|head -n2|tail -n1
+done
+
+
+#2) all bioproject dreped bins to process drep again
+mkdir -p ~/Public/results/00_CombinedAnalysis/drep_input2/
+cp  ~/Public/results/*/drep/drep_out/dereplicated_genomes/*.fa  ~/Public/results/00_CombinedAnalysis/drep_input2/
+
+sbatch /work/home/acq6mmxy68/pipeline/sbatch/II-5b_drep_dereplicate_combine.sbatch
+
+
+##----------------II-6: gtdbtk----------------
+export GTDBTK_DATA_PATH=/home/quanjp/resource/gtdbtk
+source ~/.bashrc
+conda activate gtdbtk-2.5.2
+cp ~/Public/results/00_CombinedAnalysis/drep_input2/ /home/quanjp/tmp
+
+gtdbtk classify_wf \
+ --genome_dir /home/quanjp/tmp \
+ --out_dir /home/quanjp/tmp/dRep_ANI99/gtdbtk_classify_wf \
+ --extension fa \
+ --skip_ani_screen \
+ --prefix bin \
+ --cpus 36 \
+ --scratch_dir /data1/resource/gtdbtk \
+ --pplacer_cpus 2
+
+cd ~/CleanMAG/dRep_ANI99/gtdbtk_classify_wf
+cat */*/bin.bac120.summary.tsv > ./bin.bac120.summary.tsv
+
+
+#Selecte the annotated MAGs
+cd /home/quanjp/taxonomy
+cat bin.bac120.summary.tsv gtdbtk.bac120.summary.tsv|grep -v 'user_genome'|cut -f1,2|sort -k1,1 > taxanomy.txt
+grep -v -w -f <(cut -f1 extract_bin.bac120.summary.tsv) taxanomy.txt > taxanomy_movedMiss.txt
+cat taxanomy_movedMiss.txt extract_bin.bac120.summary.tsv|grep -v 'user_genome'|cut -f1,2|sort -k1,1 > taxanomy_final.txt
+
+
+##-------------------quantification using coverM----------------------
+for BIOPROJECT in PRJEB15296
+do
+while read line
+do
+
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+logdir=/work/home/acq6mmxy68/pipeline/logs
+
+sbatch --export=sample="$sample",bioproject="$bioproject",logdir="$logdir" /work/home/acq6mmxy68/pipeline/sbatch/coverM.sbatch
+
+done < <(tail -n+2 /work/home/acq6mmxy68/pipeline/config/sampleList/sample_metadata_"$BIOPROJECT"_unmap.tsv|grep 'ERR1606221')
+
+done
+
+#combine all coverm results to generat TPM abundance matrix
+realpath /work/home/acq6mmxy68/Public/results/*/coverM/*/output_coverm.tsv  >  ~/coverm.path.txt
+python /work/home/acq6mmxy68/pipeline/script/merge_coverm_multicol.py
+
+python /work/home/acq6mmxy68/pipeline/script/ merge_MAGs_ANI95_coverm.py
+mv merged_tpm_clean.tsv ~/Public/results/  && mv ~/Public/results/merged_tpm_clean.tsv ~/Public/results/GSGC_merged_tpm_ani95.tsv
+
+
+##################################################
+#                                                                                                                        #
+#       III: phage-bacteria study                                                                     #
+#                                                                                                                        #  
+##################################################
+
+##-----------------III-1: virsorter2----------------
+for BIOPROJECT in PRJEB15296
+do
+while read line
+do
+
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+logdir=/public1/home/m6l600415/Public/pipeline/logs
+
+sbatch --export=sample="$sample",bioproject="$bioproject",logdir="$logdir" /public1/home/m6l600415/Public/pipeline/sbatch/virsorter2_viralPrediction.sbatch
+
+done < <(tail -n+2 /public1/home/m6l600415/Public/pipeline/config/sampleList/sample_metadata_"$BIOPROJECT"_unmap.tsv)
+done
+
+
+
+##-----------------III-2: vibrant and viralverify----------------
+for BIOPROJECT in PRJEB26961
+do
+while read line
+do
+
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+logdir=/public1/home/m6l600415/Public/pipeline/logs
+
+sbatch --export=sample="$sample",bioproject="$bioproject",logdir="$logdir" /public1/home/m6l600415/Public/pipeline/sbatch/vibrant_viralverify_viralPrediction.sbatch
+
+done < <(tail -n+2 /public1/home/m6l600415/Public/pipeline/config/sampleList/sample_metadata_"$BIOPROJECT"_unmap.tsv)
+done
+
+
+
+##-----------------III-3: viral Identification ----------------
+for BIOPROJECT in CRA010380
+do
+while read line
+do
+
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+logdir=/public1/home/m6l600415/Public/pipeline/logs
+
+sbatch --export=sample="$sample",bioproject="$bioproject",logdir="$logdir" /public1/home/m6l600415/Public/pipeline/sbatch/viral_identification.sbatch
+
+done < <(tail -n+2 /public1/home/m6l600415/Public/pipeline/config/sampleList/sample_metadata_"$BIOPROJECT"_unmap.tsv)
+done
+
+#Refilter the scoring results of the three software (more strictly)
+#1. Count the number of non-zero columns (tools_count)
+#2. If count == 3, require $7 > 1
+#3. If count == 2, require $7 > 1.33
+
+while read -r bioproject sample
+do
+
+awk -F'\t' 'NR==1 {print $0} NR>1 {
+    count=0; 
+    if($8>0) count++; 
+    if($9>0) count++; 
+    if($10>0) count++; 
+    
+    avg=$7;
+    
+    if (count == 3 && avg > 1) print $0;
+    else if (count == 2 && avg > 1.33) print $0;
+}'  /public1/home/m6l600415/Public/viral_identification/${bioproject}/${sample}/ViralIdentification_scores.tsv > /public1/home/m6l600415/Public/viral_identification/${bioproject}/${sample}/ViralIdentification_scores.tsv3
+
+done < ~/bioproject_sample.txt
+
+##---------------------------combine all genomad files--------------------------------------
+cd /public1/home/m6l600415/Public/dRep
+output_file="all_genomad_summary_combined.tsv"
+
+while read -r bioproject sample
+do
+    file_path="/public1/home/m6l600415/Public/viral_identification/$bioproject/$sample/genomad_out/viral_contigs_only_summary/viral_contigs_only_virus_summary.tsv"
+    
+    if [ -f "$file_path" ]; then
+        echo "Processing: $bioproject $sample"
+        awk 'FNR==1 {if (NR==1) print $0; next} {print $0}' "$file_path" >> "$output_file"
+    else
+        echo "Warning: File not found for $bioproject $sample"
+    fi
+done < ~/bioproject_sample.txt
+
+
+##---------------III-4 meta information of contig---------------
+# Summarize all the polishing steps in a table. In this step the lifestyle of the phages is inferred from the output of the various identification tools
+source ~/.bashrc
+conda activate r_vi_env
+
+while read -r bio sample
+do
+    echo "Processing: $bio $sample"
+    mkdir -p /public1/home/m6l600415/Public/viral_identification/$bio/$sample/metadata
+    
+    Rscript /public1/home/m6l600415/Public/pipeline/script/aggragte_viral_metadata.R \
+        -m /public1/home/m6l600415/Public/viral_identification/$bio/$sample/ViralIdentification_scores.tsv3 \
+        -t /public1/home/m6l600415/Public/viral_identification/$bio/$sample/parse_trimming/checkv_provirus_regions.tsv \
+        -q /public1/home/m6l600415/Public/viral_identification/$bio/$sample/checkv_binning_filter/checkv_quality_summary_filtered.tsv \
+        -o /public1/home/m6l600415/Public/viral_identification/$bio/$sample/metadata/virus_metadata.tsv.test
+done < ~/bioproject_sample.txt
+
+
+# Aggregate all the metadata
+while read -r bio sample
+do
+    meta=/public1/home/m6l600415/Public/viral_identification/$bio/$sample/metadata/virus_metadata.tsv2
+    [[ -s $meta ]] && echo "$meta" >> metadata2.list
+done < ~/bioproject_sample.txt
+
+
+#Merge all metadata and filter out rows that meet any of the following criteria: completeness < 90%, low-confidence DTR, no viral genes detected
+cd /public1/home/m6l600415
+python /public1/home/m6l600415/Public/pipeline/script/merge_virus_metadata.py2
+cd /public1/home/m6l600415/Public/dRep
+
+awk '$7>0' retained_virus_metadata2.tsv|awk '$9=="Complete"||$9=="High-quality"'|cut -f2  > high_quality_virus_metadata2.list
+awk '$7 > 0 && $9 == "Medium-quality" && $10 !~ />/ && $10 !~ /low-confidence/' retained_virus_metadata2.tsv|cut -f2 > medium_quality_virus_metadata2.list
+
+
+awk -F'\t' '
+    NR==FNR {ids[$1]; next} 
+    {if ($1 in ids) print $0}
+' high_quality_virus_metadata2.list all_genomad_summary_combined.tsv| awk '$7>=0.9'|cut -f1 > high_quality_virus_metadata2.genomadFilter.list 
+
+
+awk -F'\t' '
+    NR==FNR {ids[$1]; next} 
+    {if ($1 in ids) print $0}
+' medium_quality_virus_metadata2.list all_genomad_summary_combined.tsv|awk '$7>=0.9'|cut -f1 > medium_quality_virus_metadata2.genomadFilter.list
+
+
+
+###-------------------------------dereplicated vOTU----------------------------------
+ls /public1/home/m6l600415/Public/viral_identification/*/*/viral_fasta/viral_contigs_filtered.fasta > ~/viral_contigs_pathway.txt
+while read filepath; do
+    project=$(echo "$filepath" | awk -F"/" '{print $(NF-3)}')
+    sample=$(echo "$filepath" | awk -F"/" '{print $(NF-2)}')
+    
+    newname="${project}_${sample}_viral_contigs_filtered.fasta"
+   
+    dir=$(dirname "$filepath")
+    
+    mv "$filepath" "${dir}/${newname}"
+done < viral_contigs_pathway.txt
+
+# get all the vOTUs in a single fasta file
+mkdir /public1/home/m6l600415/Public/viral_identification/allContigs
+cp /public1/home/m6l600415/Public/viral_identification/*/*/viral_fasta/*viral_contigs_filtered.fasta /public1/home/m6l600415/Public/viral_identification/allContigs
+cd /public1/home/m6l600415/Public/viral_identification/allContigs && cat *fasta > all_viral_contigs_redundant.fasta
+
+
+##-------------------------local seaver---------------------------
+conda activate mmseq2
+
+seqkit grep -f high_quality_virus_metadata2.genomadFilter.list all_viral_contigs_redundant.fasta > high_quality_viral_contigs_redundant.fasta
+seqkit grep -f medium_quality_virus_metadata2.genomadFilter.list all_viral_contigs_redundant.fasta > medium_quality_viral_contigs_redundant.fasta
+
+mmseqs easy-cluster  high_quality_viral_contigs_redundant.fasta /data2/qjp/high_quality_viral  /data2/qjp/tmp --min-seq-id 0.95 -c 0.85 --cov-mode 1  --threads 64 --cluster-reassign 1
+mmseqs easy-cluster  medium_quality_viral_contigs_redundant.fasta /data2/qjp/medium_quality_viral  /data2/qjp/tmp --min-seq-id 0.95 -c 0.85 --cov-mode 1  --threads 64 --cluster-reassign 1
+
+cat high_quality_viral_contigs_redundant.fasta medium_quality_viral_contigs_redundant.fasta > high_medium_quality_viral_contigs_redundant.fasta
+mmseqs easy-cluster  high_medium_quality_viral_contigs_redundant.fasta /data2/qjp/high_medium_quality_viral  /data2/qjp/tmp --min-seq-id 0.95 -c 0.85 --cov-mode 1  --threads 64 --cluster-reassign 1
+
+genomad end-to-end --cleanup --threads 64 high_medium_quality_viral_rep_seq.fasta /home/quanjp/genomad_out /home/quanjp/software/genomad/genomad/genomad_db
+
+awk '$7>=0.9' ~/genomad_out/high_medium_quality_viral_rep_seq_summary/high_medium_quality_viral_rep_seq_virus_summary.tsv|cut -f1|awk 'NR>1' > ~/genomad_out/high_medium_quality_viral_rep_seq_summary/high_medium_quality_viral.genomadFilter.txt
+seqkit grep -f ~/genomad_out/high_medium_quality_viral_rep_seq_summary/high_medium_quality_viral.genomadFilter.txt ~/genomad_out/high_medium_quality_viral_rep_seq_summary/high_medium_quality_viral_rep_seq_virus.fna >  /data2/qjp/high_medium_quality_viral.Final.fasta
+
+cd /data2/qjp
+seqkit grep -f high_quality_virus_metadata2.genomadFilter.list high_medium_quality_viral.Final.fasta > high_quality_viral.Final.fasta
+seqkit grep -f medium_quality_virus_metadata2.genomadFilter.list high_medium_quality_viral.Final.fasta >medium_quality_viral.Final.fasta
+
+
+#----------------------------------------------bacphlip----------------------------
+mkdir BACPHLIP_input && cd BACPHLIP_input && awk '{print >> ("chunk_" (int((nr-1)/20000)+1) ".fasta"); nr++}' nr=1 /data2/qjp/high_quality_viral_rep_seq.fasta
+ls chunk*.fasta | parallel -j 16 "bacphlip -i {} --multi_fasta -f"
+
+cd /data2/qjp/BACPHLIP_input
+awk 'FNR==1 && NR!=1{next;}{print}' *.fasta.bacphlip > all_vOTUs_lifestyle_predictions.tsv
+
+
+#----------------------------------------------Phatyp----------------------------
+#phatyp  env
+#cd /data2/qjp
+python /home/quanjp/software/PhaTYP/preprocessing.py --contigs medium_quality_combineFilter_viral_rep_seq.fasta --len 5000 --midfolder /data2/qjp/medium_phatyp
+python /home/quanjp/software/PhaTYP/preprocessing.py --contigs high_quality_viral_rep_seq.fasta --len 5000 --midfolder /data2/qjp/high_phatyp
+
+#cd ~/software/PhaTYP
+python /home/quanjp/software/PhaTYP/PhaTYP.py --out medium_quality_combineFilter.phatyp.csv --midfolder /data2/qjp/medium_phatyp
+python /home/quanjp/software/PhaTYP/PhaTYP.py --out high_quality_combineFilter.phatyp.csv --midfolder /data2/qjp/high_phatyp
+
+#lifestyle
+mkdir liftstyle && cp /data2/qjp/BACPHLIP_input/all_vOTUs_lifestyle_predictions.tsv ./liftstyle/ && cp ~/software/PhaTYP/high_quality_combineFilter.phatyp.csv ./liftstyle/
+cat all_vOTUs_lifestyle_predictions.tsv|tr ',' '\t'|awk '$2>=0.95'|wc -l  
+python ~/script/integrate_lifestyle_thresh095.py
+
+cat integrated_lifestyle_predictions_thresh095.csv|tr ',' '\t'|grep 'consistent_high_conf'|wc -l
+cat integrated_lifestyle_predictions_thresh095.csv|tr ',' '\t'|grep 'consistent_high_conf'|grep 'virulent'|wc -l
+cat integrated_lifestyle_predictions_thresh095.csv|tr ',' '\t'|grep 'consistent_high_conf'|grep 'temperate'|wc -l
+
+
+#----------------------------------------------iPHoP----------------------------
+#host prediction
+#conda activate iphop_v1.4
+#cd /data2/qjp
+tar -zxvf iPHoP_db_Jun25_rw.tar.gz
+
+ulimit -n 655350
+
+conda activate iphop_v1.4
+
+iphop predict --fa_file high_medium_quality_viral_rep_seq.fasta  --out_dir /data2/qjp/high_medium_quality_viral_iphop --db_dir /data2/qjp/Jun_2025_pub_rw/ --num_threads 64
+
+cd /data2/qjp/iphop_input && awk 'BEGIN {n=1} /^>/ {if (count % 2000 == 0 && count != 0) n++ ; count++ } {print > "part_" n ".fasta"}' /data2/qjp/high_quality_viral_rep_seq.fasta
+
+for i in {1..12}; do
+    nohup iphop predict --fa_file part_${i}.fasta \
+                  --out_dir out_part_${i} \
+                  --db_dir /data2/qjp/Jun_2025_pub_rw/ \
+                  --num_threads 32 > log_part_${i}.txt 2>&1 &
+    sleep 5
+done
+
+
+###-------------medium quality vOTU  iphop analysis----------------------
+cd /public1/home/m6l600415/resource
+awk 'BEGIN {n=1} /^>/ {if (count % 2000 == 0 && count != 0) n++ ; count++ } {print > "part_" n ".fasta"}' medium_quality_vOTU.fasta
+#medium quality
+for i in {6..55}
+do
+    sbatch --export=ALL,i="$i" /public1/home/m6l600415/Public/pipeline/sbatch/iphop.sbatch
+done
+
+cp out_part_1/Host_prediction_to_genome_m90.csv medium_quality_Host_prediction_to_genome_m90.csv
+cp out_part_1/Host_prediction_to_genus_m90.csv medium_quality_Host_prediction_to_genus_m90.csv
+
+for i in {2..55}; do
+    tail -n +2 "out_part_${i}/Host_prediction_to_genome_m90.csv" >> medium_quality_Host_prediction_to_genome_m90.csv
+done
+
+for i in {2..55}; do
+    tail -n +2 "out_part_${i}/Host_prediction_to_genus_m90.csv" >>  medium_quality_Host_prediction_to_genus_m90.csv
+done
+
+
+
+#----------------------high quality vOTU iphop analysis---------------------
+awk 'BEGIN {n=1} /^>/ {if (count % 1000 == 0 && count != 0) n++ ; count++ } {print > "part_" n ".fasta"}' high_quality_viral_rep_seq.fasta
+
+for i in {1..111}
+do
+    sbatch --export=ALL,i="$i" /public1/home/m6l600415/Public/pipeline/sbatch/iphop_hq.sbatch
+done
+
+cp out_part_1/Host_prediction_to_genome_m90.csv high_quality_Host_prediction_to_genome_m90.csv
+cp out_part_1/Host_prediction_to_genus_m90.csv high_quality_Host_prediction_to_genus_m90.csv
+
+for i in {2..111}; do
+    tail -n +2 "out_part_${i}/Host_prediction_to_genome_m90.csv" >> high_quality_Host_prediction_to_genome_m90.csv
+done
+
+for i in {2..111}; do
+    tail -n +2 "out_part_${i}/Host_prediction_to_genus_m90.csv" >>  high_quality_Host_prediction_to_genus_m90.csv
+done
+
+
+#-----------------------------------------CRISPR-spacer-------------------------
+cut -f1 /data2/qjp/qjp_desk/taxonomy/taxanomy_final.txt|while read line
+do
+cp /data2/qjp/qjp_desk/CleanMAG/"$line".fa /data2/qjp/qjp_desk/CleanMAG/annotatedMAG
+done
+
+cd /data2/qjp/qjp_desk
+ls CleanMAG/annotatedMAG/*.fa | parallel -j 20 "python /data2/qjp/qjp_desk/identify_crispr.py -i {} -o MAG_crispr_results/{/.}"
+python /data2/qjp/qjp_desk/merge_crispr.py MAG_crispr_results/crt MAG_crispr_results/pilercr MAG_crispr_results/merged
+python extract_spacers.py                                                 
+
+makeblastdb -in /data2/qjp/high_quality_viral_rep_seq.fasta -dbtype nucl -out high_quality_viral_db/Rep_vOTU
+
+blastn -query all_mags_merged_spacers.fasta \
+    -db high_quality_viral_db/Rep_vOTU \
+    -outfmt '6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore' \
+    -out Spacers_vs_highQualityViral_results.tsv \
+    -num_threads 64 \
+    -task blastn-short \
+    -word_size 18 \
+    -dust no \
+    -perc_identity 95 \
+    -evalue 1e-5
+
+#----------------------------------------coverM---------------------------------------
+for BIOPROJECT in PRJNA526405
+
+do
+while read line
+do
+
+sample=$(echo $line | cut -d " " -f 1)
+bioproject=$(echo $line | cut -d " " -f 2)
+logdir=/public1/home/m6l600415/Public/pipeline/logs
+
+sbatch --export=sample="$sample",bioproject="$bioproject",logdir="$logdir" /public1/home/m6l600415/Public/pipeline/sbatch/coverM.sbatch
+
+done < <(tail -n +201 /public1/home/m6l600415/Public/pipeline/config/sampleList/sample_metadata_"$BIOPROJECT"_unmap.tsv2)
+done
+
+
+##-------------------------------combime all bioproject result--------------------------
+for file in PRJNA526405
+do
+
+	python3 /public1/home/m6l600415/Public/pipeline/script/universal_merge_coverm.py /public1/home/m6l600415/Public/coverM/$file
+
+done
+
+python /public1/home/m6l600415/viral_quan_count_tpm/all_bioprojects_merge.py
+
+
+#-----------------------------Identification of AMGs and ARGs----------------------
+##vibrant and prodigal
+sbatch /public1/home/m6l600415/Public/pipeline/sbatch/virbant_AMG.sbatch
+
+#sbatch /public1/home/m6l600415/Public/pipeline/sbatch/prodigal.sbatch
+prodigal -i /public1/home/m6l600415/resource/high_medium_quality_viral.Final.fasta \
+         -a /public1/home/m6l600415/resource/high_medium_quality_viral.Final.proteins.faa \
+         -d /public1/home/m6l600415/resource/high_medium_quality_viral.Final.genes.ffn \
+         -o /public1/home/m6l600415/resource/high_medium_quality_viral.Final.prodigal_output.txt \
+         -p meta
+
+
+
+## AMRfinder
+amrfinder -p /data2/qjp/high_medium_quality_viral.Final.proteins.faa \
+    -d /home/quanjp/software/amrfinder_db/2025-07-16.1 \
+    --plus \
+    --threads 32 \
+    -o /data2/qjp/amrfinder/high_quality_viral_amrfinder_results.tsv
+
+
+
+# DIAMOND blastp SARG
+diamond makedb --in /home/quanjp/software/SARG/4.SARG_v3.2_20220917_Short_subdatabase.fasta -d /home/quanjp/software/SARG/SARG_v3.2_db
+
+diamond blastp \
+    --query /data2/qjp/high_medium_quality_viral.Final.proteins.faa \
+    --db /home/quanjp/software/SARG/SARG_v3.2_db.dmnd \
+    --out /data2/qjp/SARG/high_quality_viral_sarg_annotation.tsv \
+    --outfmt 6 qseqid sseqid pident length slen qlen evalue bitscore \
+    --threads 64 \
+    --id 40 \
+    --subject-cover 50 \
+    --evalue 1e-5 \
+    --max-target-seqs 1
+
+SRR15558296_viral_contig_88812_15 
+
+#------------------------VFDB------------------
+#build index
+diamond makedb --in /home/quanjp/software/VFDB/VFDB_setB_pro.fas -d /home/quanjp/software/VFDB/VFDB_setB_db
+
+diamond blastp \
+    --query /data2/qjp/high_medium_quality_viral.Final.proteins.faa \
+    --db /home/quanjp/software/VFDB/VFDB_setB_db.dmnd \
+    --out /data2/qjp/VFDB/high_quality_viral_vfg_annotation.tsv \
+    --outfmt 6 qseqid sseqid pident length slen qlen evalue bitscore \
+    --threads 64 \
+    --id 40 \
+    --subject-cover 50 \
+    --evalue 1e-5 \
+    --max-target-seqs 1
+	
+
+##--------------eggNOG-----------------------
+#eggNOG (running in eggnog-mapper conda env)
+conda deactivate
+cd /home/quanjp/eggnog-mapper/bin && source activate
+
+emapper.py \
+    -i /data2/qjp/high_medium_quality_viral.Final.proteins.faa \
+    -o /data2/qjp/viral_eggnog \
+    --cpu 32 \
+    --data_dir /data2/qjp/qjp_desk/resource/eggNOG \
+    --dmnd_db /data2/qjp/qjp_desk/resource/eggNOG/eggnog_proteins.dmnd \
+    --dbtype seqdb \
+    -m diamond \
+    --matrix BLOSUM62 \
+    --seed_ortholog_evalue 1e-5 \
+	> /data2/qjp/viral_eggnog/viral_eggnog_out.log
+
+
+
+##---------------------Assess the similarity against known databases or previously published findings----------
+##------------------------------IMG_VR database----------------
+##--protein level
+diamond makedb --in IMGVR_all_proteins-high_confidence.faa --db IMGVR_all_proteins-high_confidence.dmnd  -t 32
+diamond blastp \
+    --query /data2/qjp/high_medium_quality_viral.Final.proteins.faa \   #13,565,901
+    --db /data2/qjp/IMG_VR/IMG_VR_2022-12-19_7.1/IMGVR_all_proteins-high_confidence.dmnd \
+    --out /data2/qjp/high_medium_quality_viral_diamond_IMG_VR.tsv \
+    --outfmt 6 \
+    --threads 32 \
+    --max-target-seqs 1 \
+    --evalue 1e-5
+
+for i in {1..170}
+do
+    sbatch --export=ALL,i="$i" /public1/home/m6l600415/Public/pipeline/sbatch/diamond_IMGVR.sbatch
+done
+
+
+#statistic identity >95% and coverage >50%
+tail -n +2 *IMG_VR.tsv|grep -v '=='|awk '$3>=95&&$4/$5>=0.5'  >  /public1/home/m6l600415/faa_query_split/faa_MappedTo_IMGvr_diamond.tsv
+
+##---DNA level
+mmseqs createdb IMGVR_all_nucleotides-high_confidence.fna /public1/home/m6l600415/IMGVR_nr_db/IMGVR_nr_db
+
+sbatch /public1/home/m6l600415/Public/pipeline/sbatch/faaToIMGvr.mmseq.sbatch
+
+
+##-----------------------------ictv database--------------------
+##---protein level
+diamond makedb --in /data2/ictv-mmseqs2-protein-database/ictv_nr.faa.gz --db /data2/qjp/ictv_nr.dmnd  -t 32
+
+for i in {1..170}
+do
+    sbatch --export=ALL,i="$i" /public1/home/m6l600415/Public/pipeline/sbatch/diamond_ICTV.sbatch
+done
+
+#statistic identity >95% and coverage >50%
+tail -n +2 *_ictv.tsv|grep -v '=='|awk '$3>=95&&$4/$5>=0.5'  >  /public1/home/m6l600415/faa_query_split/faa_MappedTo_ictv_diamond.tsv 
+
+##---DNA level
+sbatch /public1/home/m6l600415/Public/pipeline/sbatch/faaToICTV.mmseq.sbatch  #2,180 #vOTU占比 =  2180 /224,605
+
+
+##----------------------------Study1-------------
+sed 's/^>/&Npj_/' /data1/resource/npj_viral_data/pig_vOTUs_above50.fa > /data2/qjp/Npj_labeled.fna
+cat gsvc_labeled.fna  /data2/qjp/Npj_labeled.fna > gsvc_npj_labeled.fna
+mmseqs easy-cluster  /data2/qjp/gsvc_npj_labeled.fna  /data2/qjp/gsvc_npj_labeled  /data2/qjp/tmp --min-seq-id 0.95 -c 0.85 --cov-mode 1  --threads 64 --cluster-reassign 1
+
+
+##------------------------------Study2-----------
+##sequence cluster
+sed 's/^>/&GSVC_/' high_medium_quality_viral.Final.fasta > gsvc_labeled.fna
+sed 's/^>/&Mic_/' /data1/resource/microbiome_viral_data/PGV.fna > /data2/qjp/Mic_labeled.fna
+cat gsvc_labeled.fna  /data1/resource/microbiome_viral_data/Mic_labeled.fna > gsvc_mic_labeled.fna
+mmseqs easy-cluster  /data2/qjp/gsvc_mic_labeled.fna  /data2/qjp/gsvc_mic_labeled  /data2/qjp/tmp --min-seq-id 0.95 -c 0.85 --cov-mode 1  --threads 64 --cluster-reassign 1
+
+
+

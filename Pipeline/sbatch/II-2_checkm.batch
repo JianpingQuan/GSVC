@@ -1,0 +1,27 @@
+#!/bin/bash
+
+#SBATCH --job-name=checkm
+#SBATCH --output=/dev/null
+#SBATCH --error=/dev/null
+#SBATCH --time=24:00:00
+#SBATCH --cpus-per-task=20
+#SBATCH --mem=50G
+#SBATCH --partition=xahcnormal
+
+# 激活环境
+source ~/.bashrc
+conda activate metagenome_env
+
+# 参数准备
+echo "[INFO] Loading config from: $contig"
+source "$contig" || { echo "[ERROR] Failed to source $contig"; exit 1; }
+
+mkdir -p "$logdir/$bioproject/checkm"
+LOG_OUT="$logdir/$bioproject/checkm/${sample}.checkm.out"
+LOG_ERR="$logdir/$bioproject/checkm/${sample}.checkm.err"
+
+{
+  echo "[INFO] Running CheckM for sample: $sample"
+  bash /work/home/acq6mmxy68/pipeline/modules/II-2_checkm.sh "$sample" "$bioproject"
+  echo "[INFO] Finished CheckM for $sample"
+} > "$LOG_OUT" 2> "$LOG_ERR"

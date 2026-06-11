@@ -1,0 +1,65 @@
+#!/bin/bash
+#SBATCH --job-name=salmon_merge
+#SBATCH --output=/work/home/acq6mmxy68/pipeline/logs/bioproject/salmon_merge_%x_%j.out
+#SBATCH --error=/work/home/acq6mmxy68/pipeline/logs/bioproject/salmon_merge_%x_%j.err
+#SBATCH --time=24:00:00
+#SBATCH --cpus-per-task=64
+#SBATCH --mem=256G
+#SBATCH --partition=xahcnormal
+#SBATCH --exclusive
+
+source ~/.bashrc
+conda activate metagenome_env
+
+set -euo pipefail
+# 含义：
+#   -e ：遇到命令返回非0立即退出
+#   -u ：使用未定义变量时报错
+#   -o pipefail ：管道中任一命令失败则整体失败
+
+Result="/work/home/acq6mmxy68/Public/results"
+bioproject="${bioproject:-undefined}"
+
+mkdir -p /work/home/acq6mmxy68/pipeline/logs/$bioproject/salmon/salmon_4
+
+echo "==== salmon job started at $(date) ===="
+echo "Bioproject: ${bioproject}"
+echo "---------------------------------------------"
+
+# ========= 路径检查 =========
+target_dir="$Result/${bioproject}/salmon/salmon_4"
+if [ ! -d "$target_dir" ]; then
+    echo "Error: Directory not found: $target_dir"
+    exit 1
+fi
+
+# ========= 输出路径 =========
+TPM_OUT="$target_dir/${bioproject}.gene.TPM"
+COUNT_OUT="$target_dir/${bioproject}.gene.ReadsCount"
+
+# ========= 合并 TPM =========
+echo "Merging TPM matrix..."
+salmon quantmerge --quants "$target_dir"/*.quant -o "$TPM_OUT"
+
+# ========= 合并 ReadsCount =========
+echo "Merging NumReads matrix..."
+salmon quantmerge --quants "$target_dir"/*.quant --column NumReads -o "$COUNT_OUT"
+
+# ========= 检查是否成功 =========
+if [[ ! -s "$TPM_OUT" || ! -s "$COUNT_OUT" ]]; then
+    echo "Error: quantmerge failed, output file missing or empty."
+    exit 1
+fi
+
+
+# ========= 样本名清理 =========
+sed -i '1s/\.quant//g' "$TPM_OUT"
+sed -i '1s/\.quant//g' "$COUNT_OUT"
+
+echo "quantmerge completed successfully."
+
+rm  "$target_dir"/*.quant/quant.sf
+
+rm -rf "$target_dir"/*.quant/aux_info
+
+echo "==== salmon job finished at $(date) ===="
