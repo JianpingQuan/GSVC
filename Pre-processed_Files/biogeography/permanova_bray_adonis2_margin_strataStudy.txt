@@ -1,0 +1,22 @@
+PERMANOVA (vegan::adonis2), Bray–Curtis, by = margin
+Permutation scheme: blocked within Study (strata=Study)
+vOTUs: prevalence >= 0.01, top 20000 by total counts
+Permutations: 999
+Samples (complete cases): 1952
+Formula: D_m ~ f_Gut + f_Age + f_Breed
+
+Permutation test for adonis under reduced model
+Marginal effects of terms
+Blocks:  meta_m$f_Study 
+Permutation: free
+Number of permutations: 999
+
+adonis2(formula = fml_ws, data = meta_m, permutations = ctrl, by = "margin")
+           Df SumOfSqs      R2      F Pr(>F)    
+f_Gut       5    34.89 0.05367 24.662  0.001 ***
+f_Age       4    22.65 0.03483 20.010  0.001 ***
+f_Breed     5    15.86 0.02440 11.212  0.001 ***
+Residual 1937   548.09 0.84302                  
+Total    1951   650.15 1.00000                  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

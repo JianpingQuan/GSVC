@@ -1,0 +1,39 @@
+path	bytes	md5_placeholder	description
+meta_qc/meta_augmented_combined.tsv	1493677	-	Sample metadata (5064 libraries)
+meta_qc/PAM_k4_samples.tsv	46860	-	Enterotype PAM k=4 assignments
+meta_qc/caudoviricetes_votu_annotated_merged.tsv	63703176	-	vOTU host genus for enterotype drivers
+high_medium_quality_length.txt	4283487	-	vOTU length distribution
+high_medium_quality_checkv_results.tsv	28821311	-	CheckV quality metrics
+high_medium_quality_viral_rep_seq_virus_summary.tsv	33658502	-	vOTU representative summary
+host_infection_vOTU_list_per_host_species.csv	9583472	-	Host infection load per species
+lifestyle_reliable_combined.csv	4325809	-	BACPHLIP+PhaTYP consensus lifestyle
+high_quality_Host_prediction_to_genome_m90.csv	62673141	-	iPHoP host predictions (HQ genome)
+high_quality_Host_prediction_to_genus_m90.csv	9832507	-	iPHoP host predictions (HQ genus)
+species_TPM_virulent_phage_TPM_per_sample_sig_neg.csv	3948440	-	Kill-the-Winner per-sample TPM
+Pre-processed_Files/biogeography/permanova_bray_margins_long.tsv	37	-	PERMANOVA marginal effects
+Pre-processed_Files/biogeography/permanova_bray_margins_long_strataStudy.tsv	37	-	PERMANOVA blocked by study
+Pre-processed_Files/biogeography/permanova_bray_adonis2_margin.txt	839	-	PERMANOVA adonis2 output
+Pre-processed_Files/biogeography/permanova_bray_adonis2_margin_strataStudy.txt	857	-	PERMANOVA adonis2 blocked
+Functional/summary_tables/arg_phage_carriers_sarg_only	3165287	-	Fig.6 inputs (12 files)
+Functional/summary_tables/arg_phage_carriers_sarg_nonstrict	3960770	-	Fig.6 inputs (12 files)
+Functional/summary_tables/arg_country_compare	11631	-	Fig.6 inputs (3 files)
+Functional/summary_tables/host_phage_ko_coupling	1130623	-	Fig.6 inputs (7 files)
+Functional/summary_tables/amg_spacer_host	8133449	-	Fig.6 inputs (4 files)
+Functional/summary_tables/vibrant_amg_spacer_host	2968532	-	Fig.6 inputs (4 files)
+Functional/summary_tables/vibrant_metabolism_host_enrichment	2788183	-	Fig.6 inputs (6 files)
+Functional/summary_tables/eggnog_top_terms	1621	-	Fig.6 inputs (2 files)
+Functional/summary_tables/eggnog_votu_gene_stats	3463	-	Fig.6 inputs (4 files)
+Functional/summary_tables/vf_phage_host	1971856	-	Fig.6 inputs (7 files)
+Functional/summary_tables/kegg_metabolism_five_categories	798	-	Fig.6 inputs (3 files)
+Functional/taxanomy_final.txt	1888266	-	Fig.6 auxiliary
+Functional/VIBRANT_AMG_individuals_high_quality_viral_rep_seq.tsv	12100760	-	Fig.6 auxiliary
+Functional/summary_tables/vOTU_functional_capacity_summary.tsv	15063174	-	Functional summary
+Functional/summary_tables/integrated_functional/integrated_ARG_VF_eggNOG_items.tsv	1898	-	Functional summary
+meta_qc/PRJNA1010706_treatment_analysis/R	4934	-	AAAS figure themes (2 files)
+meta_qc/PRJNA1010706_treatment_analysis/results/phage_votu_diversity	123231	-	Fig.7 inputs (25 files)
+meta_qc/PRJNA1010706_treatment_analysis/results/arg_phage_sarg_fraction	66342	-	Fig.7 inputs (17 files)
+meta_qc/PRJNA1010706_treatment_analysis/results/lsalivarius_prophage_evidence	23781	-	Fig.7 inputs (7 files)
+meta_qc/PRJNA1010706_treatment_analysis/results/phage_adwg_growth	863336	-	Fig.7 inputs (25 files)
+meta_qc/PRJNA1010706_treatment_analysis/results/phage_host_species_phenotype	2443539	-	Fig.7 inputs (43 files)
+meta_qc/PRJNA1010706_treatment_analysis/results/functional_heatmap	5389035	-	Fig.7 inputs (16 files)
+meta_qc/PRJNA1010706_treatment_analysis/results/host_range_functional_single_vs_broad_gt10_all	6825307	-	Fig.7 inputs (8 files)
